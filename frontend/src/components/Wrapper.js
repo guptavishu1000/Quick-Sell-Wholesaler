@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
+
 export const Wrapper = props => {
     return <>
         <header className="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-            <a className="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Company name</a>
+            <Link className="navbar-brand col-md-3 col-lg-2 me-0 px-3" to="/">Quick Sell Wholesaler</Link>
 
             <div className="navbar-nav">
                 <div className="nav-item text-nowrap">
@@ -16,9 +18,14 @@ export const Wrapper = props => {
                     <div className="position-sticky pt-3">
                         <ul className="nav flex-column">
                             <li className="nav-item">
-                                <a className="nav-link active" aria-current="page" href="#">
+                                <Link className="nav-link" to="/">
                                     Products
-                                </a>
+                                </Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/orders">
+                                    Orders
+                                </Link>
                             </li>
                         </ul>
                     </div>
