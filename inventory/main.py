@@ -2,12 +2,21 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from redis_om import get_redis_connection, HashModel
 from pydantic_settings import BaseSettings
+import logging
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Configuration
 class Settings(BaseSettings):
-    redis_host: str = "localhost"
-    redis_port: int = 6379
-    redis_password: str = ""
+    redis_host: str = os.getenv("REDIS_HOST")
+    redis_port: int = int(os.getenv("REDIS_PORT"))
+    redis_password: str = os.getenv("REDIS_PASSWORD")
 
     class Config:
         env_file = ".env"
@@ -27,12 +36,20 @@ app.add_middleware(
 )
 
 # Redis connection
-redis = get_redis_connection(
-    host=settings.redis_host,
-    port=settings.redis_port,
-    password=settings.redis_password if settings.redis_password else None,
-    decode_responses=True
-)
+try:
+    redis = get_redis_connection(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password if settings.redis_password else None,
+        decode_responses=True
+    )
+    redis.ping()
+    logger.info("Successfully connected to Redis.")
+except Exception as e:
+    logger.error(f"Could not connect to Redis: {e}")
+    # You might want to exit or handle this more gracefully
+    # For now, we'll let it fail on requests
+    redis = None
 
 # Product model
 class Product(HashModel):
@@ -47,23 +64,33 @@ class Product(HashModel):
 @app.get("/products")
 def get_all_products():
     """Get all products"""
+    if not redis:
+        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         products = []
         for pk in Product.all_pks():
-            product = Product.get(pk)
-            products.append({
-                "id": product.pk,
-                "name": product.name,
-                "price": product.price,
-                "quantity": product.quantity
-            })
+            try:
+                product = Product.get(pk)
+                products.append({
+                    "id": product.pk,
+                    "name": product.name,
+                    "price": product.price,
+                    "quantity": product.quantity
+                })
+            except Exception as e:
+                logger.error(f"Error fetching product with pk {pk}: {e}")
+                # Skip corrupted data
+                continue
         return products
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
+        logger.error(f"Error fetching all products: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching products")
 
 @app.post("/products")
 def create_product(product: Product):
     """Create a new product"""
+    if not redis:
+        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         saved_product = product.save()
         return {
@@ -73,11 +100,14 @@ def create_product(product: Product):
             "quantity": saved_product.quantity
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating product: {str(e)}")
+        logger.error(f"Error creating product: {e}")
+        raise HTTPException(status_code=500, detail="Error creating product")
 
 @app.get("/products/{product_id}")
 def get_product(product_id: str):
     """Get a specific product by ID"""
+    if not redis:
+        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         product = Product.get(product_id)
         return {
@@ -86,12 +116,14 @@ def get_product(product_id: str):
             "price": product.price,
             "quantity": product.quantity
         }
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
 
 @app.put("/products/{product_id}")
 def update_product(product_id: str, product_data: Product):
     """Update a product"""
+    if not redis:
+        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         product = Product.get(product_id)
         product.name = product_data.name
@@ -105,16 +137,18 @@ def update_product(product_id: str, product_data: Product):
             "price": saved_product.price,
             "quantity": saved_product.quantity
         }
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
 
 @app.delete("/products/{product_id}")
 def delete_product(product_id: str):
     """Delete a product"""
+    if not redis:
+        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         Product.delete(product_id)
         return {"message": "Product deleted successfully"}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
 
 @app.get("/health")

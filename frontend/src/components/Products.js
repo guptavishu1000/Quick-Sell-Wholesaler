@@ -7,9 +7,27 @@ export const Products = () => {
 
     useEffect(() => {
         (async () => {
-            const response = await fetch('http://localhost:8000/products');
-            const content = await response.json();
-            setProducts(content);
+            try {
+                const response = await fetch('http://localhost:8000/products');
+
+                if (!response.ok) {
+                    console.error('Failed to fetch products:', response.status);
+                    setProducts([]);
+                    return;
+                }
+
+                const content = await response.json();
+
+                if (Array.isArray(content)) {
+                    setProducts(content);
+                } else {
+                    console.error('Fetched content is not an array:', content);
+                    setProducts([]);
+                }
+            } catch (e) {
+                console.error('Error fetching products:', e);
+                setProducts([]);
+            }
         })();
     }, []);
 

@@ -5,12 +5,16 @@ from pydantic_settings import BaseSettings
 from starlette.requests import Request
 import httpx
 import time
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Configuration
 class Settings(BaseSettings):
-    redis_host: str = "localhost"
-    redis_port: int = 6379
-    redis_password: str = ""
+    redis_host: str = os.getenv("REDIS_HOST")
+    redis_port: int = int(os.getenv("REDIS_PORT"))
+    redis_password: str = os.getenv("REDIS_PASSWORD")
     inventory_service_url: str = "http://localhost:8000"
 
     class Config:
