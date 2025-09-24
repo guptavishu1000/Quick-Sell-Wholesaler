@@ -4,3 +4,5 @@ redis
 redis-om
 pydantic-settings
 httpx
+gunicorn
+python-dotenv
