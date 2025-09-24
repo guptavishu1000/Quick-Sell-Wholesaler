@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     redis_host: str = os.getenv("REDIS_HOST")
     redis_port: int = int(os.getenv("REDIS_PORT"))
     redis_password: str = os.getenv("REDIS_PASSWORD")
+    frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     class Config:
         env_file = ".env"
@@ -29,7 +30,7 @@ app = FastAPI(title="Inventory Service", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTENT_URL"), "http://localhost:3000"],
+    allow_origins=[settings.frontend_url, os.getenv("INVENTORY_SERVICE_URL", "http://localhost:8000"), "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
