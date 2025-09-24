@@ -9,16 +9,18 @@ export const Orders = () => {
 
     // Load products on component mount
     useEffect(() => {
-        (async () => {
-            try {
-                const response = await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products`);
-                const content = await response.json();
-                setProducts(content);
-            } catch (e) {
-                console.error('Failed to load products:', e);
-            }
-        })();
+        fetchProducts();
     }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products`);
+            const content = await response.json();
+            setProducts(content);
+        } catch (e) {
+            console.error('Failed to load products:', e);
+        }
+    };
 
     // Update message when product is selected
     useEffect(() => {
@@ -60,6 +62,7 @@ export const Orders = () => {
                 setMessage('Thank you for your order!');
                 setSelectedProductId('');
                 setQuantity('');
+                fetchProducts();
             } else {
                 const error = await response.json();
                 setMessage(`Error: ${error.detail || 'Order failed'}`);
