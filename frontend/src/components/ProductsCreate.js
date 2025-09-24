@@ -11,7 +11,7 @@ export const ProductsCreate = () => {
     const submit = async e => {
         e.preventDefault();
 
-        await fetch('http://localhost:8000/products', {
+        await fetch('${INVENTORY_SERVICE_URL}/products', {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
                 name, price, quantity
             })

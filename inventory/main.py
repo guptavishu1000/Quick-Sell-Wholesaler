@@ -29,7 +29,7 @@ app = FastAPI(title="Inventory Service", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[os.getenv("FRONTENT_URL"), "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,16 +106,11 @@ def create_product(product: Product):
 @app.get("/products/{product_id}")
 def get_product(product_id: str):
     """Get a specific product by ID"""
-    if not redis:
-        raise HTTPException(status_code=503, detail="Redis connection not available")
     try:
         product = Product.get(product_id)
-        return {
-            "id": product.pk,
-            "name": product.name,
-            "price": product.price,
-            "quantity": product.quantity
-        }
+        product_dict = product.dict()
+        product_dict['id'] = product.pk
+        return product_dict
     except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
 
