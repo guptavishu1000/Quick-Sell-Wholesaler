@@ -8,7 +8,7 @@ export const Products = () => {
     useEffect(() => {
         (async () => {
             try {
-                const response = await fetch('${INVENTORY_SERVICE_URL}/products');
+                const response = await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products`);
 
                 if (!response.ok) {
                     console.error('Failed to fetch products:', response.status);
@@ -33,7 +33,7 @@ export const Products = () => {
 
     const del = async id => {
         if (window.confirm('Are you sure to delete this record?')) {
-            await fetch(`${INVENTORY_SERVICE_URL}/products/${id}`, {
+            await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products/${id}`, {
                 method: 'DELETE'
             });
 

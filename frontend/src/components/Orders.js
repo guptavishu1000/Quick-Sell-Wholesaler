@@ -11,7 +11,7 @@ export const Orders = () => {
     useEffect(() => {
         (async () => {
             try {
-                const response = await fetch('${INVENTORY_SERVICE_URL}/products');
+                const response = await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products`);
                 const content = await response.json();
                 setProducts(content);
             } catch (e) {
@@ -25,7 +25,7 @@ export const Orders = () => {
         (async () => {
             try {
                 if (selectedProductId) {
-                    const response = await fetch(`${INVENTORY_SERVICE_URL}/products/${selectedProductId}`);
+                    const response = await fetch(`${process.env.REACT_APP_INVENTORY_SERVICE_URL}/products/${selectedProductId}`);
                     const content = await response.json();
                     const price = parseFloat(content.price) * 1.2;
                     setMessage(`Your product price is $${price.toFixed(2)}`);
@@ -47,7 +47,7 @@ export const Orders = () => {
         }
 
         try {
-            const response = await fetch('${PAYMENT_SERVICE_URL}/orders', {
+            const response = await fetch(`${process.env.REACT_APP_PAYMENT_SERVICE_URL}/orders`, {
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify({
