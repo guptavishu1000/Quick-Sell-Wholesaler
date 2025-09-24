@@ -1,9 +1,11 @@
-import {Wrapper} from "./Wrapper";
-import {useEffect, useState} from "react";
-import {Link} from "react-router-dom";
+import { Wrapper } from "./Wrapper";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import "../assets/styles/Shimmer.css";
 
 export const Products = () => {
     const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true); // Add loading state
 
     useEffect(() => {
         (async () => {
@@ -13,6 +15,7 @@ export const Products = () => {
                 if (!response.ok) {
                     console.error('Failed to fetch products:', response.status);
                     setProducts([]);
+                    setLoading(false); // Stop loading on error
                     return;
                 }
 
@@ -27,6 +30,8 @@ export const Products = () => {
             } catch (e) {
                 console.error('Error fetching products:', e);
                 setProducts([]);
+            } finally {
+                setLoading(false); // Stop loading after fetch
             }
         })();
     }, []);
@@ -41,40 +46,60 @@ export const Products = () => {
         }
     }
 
-    return <Wrapper>
-        <div className="pt-3 pb-2 mb-3 border-bottom">
-            <Link to={`/create`} className="btn btn-sm btn-outline-secondary">Add</Link>
+    const Shimmer = () => (
+        <div className="shimmer-wrapper">
+            <div className="shimmer"></div>
         </div>
+    );
 
-        <div className="table-responsive">
-            <table className="table table-striped table-sm">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {products.map(product => {
-                    return <tr key={product.id}>
-                        <td>{product.id}</td>
-                        <td>{product.name}</td>
-                        <td>{product.price}</td>
-                        <td>{product.quantity}</td>
-                        <td>
-                            <a href="#" className="btn btn-sm btn-outline-secondary"
-                               onClick={e => del(product.id)}
-                            >
-                                Delete
-                            </a>
-                        </td>
-                    </tr>
-                })}
-                </tbody>
-            </table>
-        </div>
-    </Wrapper>
+    return (
+        <Wrapper>
+            <div className="pt-3 pb-2 mb-3 border-bottom">
+                <Link to={`/create`} className="btn btn-sm btn-outline-secondary">Add</Link>
+            </div>
+
+            <div className="table-responsive">
+                <table className="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, index) => (
+                                <tr key={index}>
+                                    <td><Shimmer /></td>
+                                    <td><Shimmer /></td>
+                                    <td><Shimmer /></td>
+                                    <td><Shimmer /></td>
+                                    <td><Shimmer /></td>
+                                </tr>
+                            ))
+                        ) : (
+                            products.map(product => {
+                                return <tr key={product.id}>
+                                    <td>{product.id}</td>
+                                    <td>{product.name}</td>
+                                    <td>{product.price}</td>
+                                    <td>{product.quantity}</td>
+                                    <td>
+                                        <a href="#" className="btn btn-sm btn-outline-secondary"
+                                            onClick={e => del(product.id)}
+                                        >
+                                            Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </Wrapper>
+    );
 }
