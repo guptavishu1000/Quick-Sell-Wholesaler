@@ -7,19 +7,26 @@ import httpx
 import time
 from dotenv import load_dotenv
 import os
+from typing import Optional
+import logging
 
 load_dotenv()
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Configuration
 class Settings(BaseSettings):
-    redis_host: str = os.getenv("REDIS_HOST")
+    redis_host: str = os.getenv("REDIS_HOST","localhost")
     redis_port: int = int(os.getenv("REDIS_PORT"))
-    redis_password: str = os.getenv("REDIS_PASSWORD")
+    redis_password: Optional[str] = os.getenv("REDIS_PASSWORD", None)
     inventory_service_url: str = os.getenv("INVENTORY_SERVICE_URL", "http://localhost:8000")
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()
 
@@ -29,7 +36,7 @@ app = FastAPI(title="Payment Service", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, settings.inventory_service_url, os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8001"), "http://localhost:3000"],
+    allow_origins=[settings.frontend_url, settings.inventory_service_url, os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8001"), "http://localhost:3000", "http://localhost:8001", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -157,6 +164,7 @@ async def create_order(request: Request, background_tasks: BackgroundTasks):
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid quantity format")
     except Exception as e:
+        logger.exception("Error creating order")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 def process_payment(order_id: str):

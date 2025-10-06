@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 import logging
 from dotenv import load_dotenv
 import os
+from typing import Optional 
 
 load_dotenv()
 
@@ -14,13 +15,14 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 class Settings(BaseSettings):
-    redis_host: str = os.getenv("REDIS_HOST")
+    redis_host: str = os.getenv("REDIS_HOST", "localhost")
     redis_port: int = int(os.getenv("REDIS_PORT"))
-    redis_password: str = os.getenv("REDIS_PASSWORD")
+    redis_password: Optional[str] = os.getenv("REDIS_PASSWORD", None)
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()
 
@@ -30,7 +32,7 @@ app = FastAPI(title="Inventory Service", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, os.getenv("INVENTORY_SERVICE_URL", "http://localhost:8000"), "http://localhost:3000"],
+    allow_origins=[settings.frontend_url, "http://localhost:8000", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,7 +82,6 @@ def get_all_products():
                 })
             except Exception as e:
                 logger.error(f"Error fetching product with pk {pk}: {e}")
-                # Skip corrupted data
                 continue
         return products
     except Exception as e:
